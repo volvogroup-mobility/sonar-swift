@@ -22,13 +22,10 @@ import com.backelite.sonarqube.objectivec.lang.core.ObjectiveC;
 import org.apache.tools.ant.DirectoryScanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sonar.api.batch.fs.FileSystem;
 import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.sensor.Sensor;
 import org.sonar.api.batch.sensor.SensorContext;
 import org.sonar.api.batch.sensor.SensorDescriptor;
-import org.sonar.api.component.ResourcePerspectives;
-import org.sonar.api.config.Settings;
 
 import java.io.File;
 
@@ -41,20 +38,6 @@ public class FauxPasSensor implements Sensor {
 
     public FauxPasSensor(SensorContext context) {
         this.context = context;
-    }
-
-    private void parseReportIn(final String baseDir, final FauxPasReportParser parser) {
-        DirectoryScanner scanner = new DirectoryScanner();
-        scanner.setIncludes(new String[]{reportPath()});
-        scanner.setBasedir(baseDir);
-        scanner.setCaseSensitive(false);
-        scanner.scan();
-        String[] files = scanner.getIncludedFiles();
-
-        for (String filename : files) {
-            LOGGER.info("Processing FauxPas report {}", filename);
-            parser.parseReport(new File(filename));
-        }
     }
 
     private String reportPath() {
@@ -73,9 +56,17 @@ public class FauxPasSensor implements Sensor {
 
     @Override
     public void execute(SensorContext context) {
-        final String projectBaseDir = context.fileSystem().baseDir().getAbsolutePath();
-
         FauxPasReportParser parser = new FauxPasReportParser(context);
-        parseReportIn(projectBaseDir, parser);
+        DirectoryScanner scanner = new DirectoryScanner();
+        scanner.setIncludes(new String[]{reportPath()});
+        scanner.setBasedir(context.fileSystem().baseDir().getAbsolutePath());
+        scanner.setCaseSensitive(false);
+        scanner.scan();
+        String[] files = scanner.getIncludedFiles();
+
+        for (String filename : files) {
+            LOGGER.info("Processing FauxPas report {}", filename);
+            parser.parseReport(new File(filename));
+        }
     }
 }

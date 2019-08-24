@@ -22,8 +22,8 @@ import org.slf4j.LoggerFactory;
 import org.sonar.api.batch.fs.FilePredicate;
 import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.sensor.SensorContext;
+import org.sonar.api.batch.sensor.issue.NewIssue;
 import org.sonar.api.batch.sensor.issue.NewIssueLocation;
-import org.sonar.api.batch.sensor.issue.internal.DefaultIssueLocation;
 import org.sonar.api.rule.RuleKey;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -88,24 +88,26 @@ final class OCLintParser {
         FilePredicate fp = context.fileSystem().predicates().hasAbsolutePath(file.getAbsolutePath());
         if(!context.fileSystem().hasFiles(fp)){
             LOGGER.warn("file not included in sonar {}", filePath);
-        } else {
-            InputFile inputFile = context.fileSystem().inputFile(fp);
-            for (int i = 0; i < nodeList.getLength(); i++) {
-                Node node = nodeList.item(i);
-                if (node.getNodeType() == Node.ELEMENT_NODE) {
-                    Element element = (Element) node;
-                    NewIssueLocation dil = new DefaultIssueLocation()
-                            .on(inputFile)
-                            .at(inputFile.selectLine(Integer.valueOf(element.getAttribute(LINE))))
-                            .message(element.getTextContent());
-                    context.newIssue()
-                            .forRule(RuleKey.of(OCLintRulesDefinition.REPOSITORY_KEY, element.getAttribute(RULE)))
-                            .at(dil)
-                            .save();
-                }
+            return;
+        }
+        InputFile inputFile = context.fileSystem().inputFile(fp);
+        for (int i = 0; i < nodeList.getLength(); i++) {
+            Node node = nodeList.item(i);
+            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                Element element = (Element) node;
+
+                NewIssue issue = context.newIssue();
+
+                NewIssueLocation issueLocation = issue.newLocation()
+                    .on(inputFile)
+                    .at(inputFile.selectLine(Integer.valueOf(element.getAttribute(LINE))))
+                    .message(element.getTextContent());
+
+                issue
+                    .forRule(RuleKey.of(OCLintRulesDefinition.REPOSITORY_KEY, element.getAttribute(RULE)))
+                    .at(issueLocation)
+                    .save();
             }
         }
-
-
     }
 }
