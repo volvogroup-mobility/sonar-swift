@@ -26,12 +26,11 @@
     <parent>
         <groupId>com.backelite.sonarqube</groupId>
         <artifactId>backelite-swift</artifactId>
-        <version>0.4.7-SNAPSHOT</version>
+        <version>0.4.7-volvo1-SNAPSHOT</version>
     </parent>
 
-    <groupId>com.backelite.sonarqube</groupId>
     <artifactId>backelite-sonar-swift-plugin</artifactId>
-    <version>0.4.7-SNAPSHOT</version>
+    <version>0.4.7-volvo1-SNAPSHOT</version>
 
     <packaging>sonar-plugin</packaging>
 
@@ -40,12 +39,12 @@
         <dependency>
             <groupId>com.backelite.sonarqube</groupId>
             <artifactId>swift-lang</artifactId>
-            <version>0.4.7-SNAPSHOT</version>
+            <version>0.4.7-volvo1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.backelite.sonarqube</groupId>
             <artifactId>objc-lang</artifactId>
-            <version>0.4.7-SNAPSHOT</version>
+            <version>0.4.7-volvo1-SNAPSHOT</version>
         </dependency>
 
         <dependency>
