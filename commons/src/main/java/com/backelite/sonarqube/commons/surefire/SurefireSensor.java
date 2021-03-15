@@ -20,17 +20,12 @@ package com.backelite.sonarqube.commons.surefire;
 import com.backelite.sonarqube.commons.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sonar.api.batch.fs.FileSystem;
+import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.sensor.Sensor;
 import org.sonar.api.batch.sensor.SensorContext;
 import org.sonar.api.batch.sensor.SensorDescriptor;
-import org.sonar.api.component.ResourcePerspectives;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 public class SurefireSensor implements Sensor {
     private static final Logger LOGGER = LoggerFactory.getLogger(SurefireSensor.class);
@@ -38,12 +33,8 @@ public class SurefireSensor implements Sensor {
     public static final String DEFAULT_REPORT_PATH = "sonar-reports/";
 
     private final SensorContext context;
-    private final ResourcePerspectives perspectives;
-    private final FileSystem fileSystem;
 
-    public SurefireSensor(FileSystem fileSystem, ResourcePerspectives perspectives, SensorContext context) {
-        this.fileSystem = fileSystem;
-        this.perspectives = perspectives;
+    public SurefireSensor(SensorContext context) {
         this.context = context;
     }
 
@@ -57,23 +48,24 @@ public class SurefireSensor implements Sensor {
     public void describe(SensorDescriptor descriptor) {
         descriptor
             .name("Surefire")
-            .onlyOnLanguages("swift","objc");
+            .onlyOnLanguages("swift","objc")
+            .onlyOnFileType(InputFile.Type.MAIN);
     }
 
     @Override
     public void execute(SensorContext context) {
-        SurefireReportParser surefireParser = new SurefireReportParser(fileSystem, perspectives, context);
-        String reportFileName = context.fileSystem().baseDir().getAbsolutePath() + "/"+ reportPath();
+        SurefireReportParser surefireParser = new SurefireReportParser(context);
+        String reportFileName = context.fileSystem().baseDir().getAbsolutePath()  + File.separator +  reportPath();
         File reportsDir = new File(reportFileName);
 
         if (!reportsDir.isDirectory()) {
             LOGGER.warn("JUnit report directory not found at {}", reportsDir);
             return;
-        } else {
-            surefireParser.collect(reportsDir);
         }
-
-
+        for (File file : reportsDir.listFiles((file,name) -> (name.startsWith("TEST") && name.endsWith(".xml")) || name.endsWith(".junit"))){
+            LOGGER.info("Processing Surefire report {}", file.getName());
+            surefireParser.parseReport(file);
+        }
+        surefireParser.save();
     }
-
 }
